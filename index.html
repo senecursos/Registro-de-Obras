@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Obras</title>
+    <!-- Bibliotecas: Ethers (Web3), QRCode e html2pdf (PDF A4) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+<body style="font-family: sans-serif; padding: 20px; background: #f4f4f9;">
+
+    <h2>Painel de Controle</h2>
+
+    <!-- Banner de Status da Carteira -->
+    <div id="statusCarteira" style="padding: 12px; margin-bottom: 20px; border-radius: 6px; font-weight: bold; background: #e2e3e5; color: #383d41;">
+        ⌛ Verificando permissão de acesso à carteira...
+    </div>
+
+    <!-- Painel de Formulário (Oculto até que a carteira seja autorizada) -->
+    <div id="painelRegistro" style="display: none;">
+        <p>Selecione o arquivo da obra para gerar o registro de autoria:</p>
+
+        <div style="margin-bottom: 15px;">
+            <label><b>Título da Obra:</b></label><br>
+            <input type="text" id="tituloObra" style="width: 100%; max-width: 400px; padding: 8px; margin-top: 4px;"><br><br>
+            
+            <label><b>Nome do Autor / Titular:</b></label><br>
+            <input type="text" id="nomeAutor" style="width: 100%; max-width: 400px; padding: 8px; margin-top: 4px;">
+        </div>
+        
+        <input type="file" id="fileInput" style="margin-bottom: 20px;"><br>
+        
+        <button id="btnRegistrar" onclick="processarERegistrar()" style="padding: 10px 20px; font-size: 16px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 4px;">
+            Registrar Obra
+        </button>
+    </div>
+
+    <div id="status" style="margin-top: 20px; font-weight: bold;"></div>
+
+    <!-- Área do Certificado Oculta (Ativada para geração de PDF) -->
+    <div id="certificadoContainer" style="display: none;">
+        <div id="certificadoA4" style="width: 210mm; min-height: 297mm; padding: 20mm; background: #ffffff; color: #111111; font-family: 'Helvetica Neue', Arial, sans-serif; box-sizing: border-box; border: 2px solid #222;">
+            
+            <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 15px; margin-bottom: 25px;">
+                <h1 style="font-size: 22px; margin: 0; text-transform: uppercase; letter-spacing: 1px;">Certificado de Registro de Autoria</h1>
+                <p style="font-size: 12px; color: #555; margin-top: 5px;">Carimbo do Tempo Descentralizado via IPFS & Blockchain Polygon</p>
+            </div>
+
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 14px;">
+                <tr>
+                    <td style="padding: 8px 0; width: 30%;"><b>Título da Obra:</b></td>
+                    <td style="padding: 8px 0;" id="certTitulo">-</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px 0;"><b>Autor / Titular:</b></td>
+                    <td style="padding: 8px 0;" id="certAutor">-</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px 0;"><b>Nome do Arquivo:</b></td>
+                    <td style="padding: 8px 0;" id="certNomeArquivo">-</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px 0;"><b>Tamanho do Arquivo:</b></td>
+                    <td style="padding: 8px 0;" id="certTamanho">-</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px 0;"><b>Data do Registro:</b></td>
+                    <td style="padding: 8px 0;" id="certData">-</td>
+                </tr>
+            </table>
+
+            <hr style="border: 0; border-top: 1px solid #ccc; margin: 20px 0;">
+
+            <div style="font-size: 13px; margin-bottom: 20px;">
+                <p style="margin-bottom: 5px;"><b>Hash Criptográfico (SHA-256):</b></p>
+                <div style="background: #f0f0f0; padding: 8px; font-family: monospace; word-break: break-all; border-radius: 4px;" id="certHash">-</div>
+            </div>
+
+            <div style="font-size: 13px; margin-bottom: 20px;">
+                <p style="margin-bottom: 5px;"><b>Identificador Permanente IPFS (CID):</b></p>
+                <div style="background: #f0f0f0; padding: 8px; font-family: monospace; word-break: break-all; border-radius: 4px;" id="certIPFS">-</div>
+            </div>
+
+            <div style="font-size: 13px; margin-bottom: 25px;">
+                <p style="margin-bottom: 5px;"><b>ID da Transação Blockchain (Polygon TxHash):</b></p>
+                <div style="background: #f0f0f0; padding: 8px; font-family: monospace; word-break: break-all; border-radius: 4px;" id="certTxHash">-</div>
+            </div>
+
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 40px; border-top: 1px dashed #aaa; padding-top: 20px;">
+                <div style="width: 65%; font-size: 11px; color: #444; line-height: 1.5;">
+                    <b>Autenticidade e Verificação Pública:</b><br>
+                    Este certificado comprova a existência técnica e a integridade da obra na data especificada.
+                    Aponte a câmera do celular para o QR Code ao lado para verificar a prova imutável registrada na rede Polygon.
+                </div>
+                <div style="text-align: center;">
+                    <div id="qrcode"></div>
+                    <span style="font-size: 10px; color: #666; margin-top: 4px; display: block;">Scanner PolygonScan</span>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const USER_WALLET = "0x695Db075b99d7C3F6FE6c7Cf56Eca791fCf4Bb9F".toLowerCase();
+        const PINATA_JWT = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiJjMzBkNzk5Zi0zMzlkLTRhOTItYTJkYS1jN2ZhNWRlMTEwZDEiLCJlbWFpbCI6IndpbGxpbnRlbnNlbXVzaWNAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsInBpbl9wb2xpY3kiOnsicmVnaW9ucyI6W3siZGVzaXJlZFJlcGxpY2F0aW9uQ291bnQiOjEsImlkIjoiRlJBMSJ9LHsiZGVzaXJlZFJlcGxpY2F0aW9uQ291bnQiOjEsImlkIjoiTllDMSJ9XSwidmVyc2lvbiI6MX0sIm1mYV9lbmFibGVkIjpmYWxzZSwic3RhdHVzIjoiQUNUSVZFIn0sImF1dGhlbnRpY2F0aW9uVHlwZSI6InNjb3BlZEtleSIsInNjb3BlZEtleUtleSI6IjczODc4ODhiZDg3ZmViNThjMTdhIiwic2NvcGVkS2V5U2VjcmV0IjoiNzBlZTNlZDM2YzJiNTYzYmUyODUyMGY1YjE1NDc2MWVhM2NjMWU0ZTM0ZmI4MjQzYjFlMDI3NjQzOTJlMGVjNiIsImV4cCI6MTgyMjI4Mjc4MX0.YcAKcAhLSVO4kBwRaEhyA5cZi7lpMNMjfq8EHMckz1k";
+
+        // Funcao de Verificacao da Carteira Conectada
+        async function verificarPermissaoCarteira() {
+            const statusBanner = document.getElementById('statusCarteira');
+            const painelRegistro = document.getElementById('painelRegistro');
+
+            if (typeof window.ethereum !== 'undefined') {
+                try {
+                    const provider = new ethers.providers.Web3Provider(window.ethereum);
+                    const contas = await provider.send("eth_requestAccounts", []);
+                    const carteiraConectada = contas[0].toLowerCase();
+
+                    if (carteiraConectada === USER_WALLET) {
+                        statusBanner.style.background = "#d4edda";
+                        statusBanner.style.color = "#155724";
+                        statusBanner.innerHTML = `✅ Carteira Autorizada Conectada: <code>${contas[0]}</code>`;
+                        painelRegistro.style.display = "block";
+                        return true;
+                    } else {
+                        statusBanner.style.background = "#f8d7da";
+                        statusBanner.style.color = "#721c24";
+                        statusBanner.innerHTML = `🚫 <b>ACESSO NEGADO:</b> A carteira <code>${contas[0]}</code> não tem permissão para registrar obras.`;
+                        painelRegistro.style.display = "none";
+                        return false;
+                    }
+                } catch (err) {
+                    statusBanner.style.background = "#fff3cd";
+                    statusBanner.style.color = "#856404";
+                    statusBanner.innerHTML = "⚠️ Falha ao conectar à MetaMask. Verifique se autorizou a conexão.";
+                    painelRegistro.style.display = "none";
+                    return false;
+                }
+            } else {
+                statusBanner.style.background = "#f8d7da";
+                statusBanner.style.color = "#721c24";
+                statusBanner.innerHTML = "⚠️ <b>MetaMask não encontrada.</b> Abra esta página utilizando o navegador interno do aplicativo MetaMask.";
+                painelRegistro.style.display = "none";
+                return false;
+            }
+        }
+
+        // Executa a verificacao assim que a pagina carrega
+        window.addEventListener('load', verificarPermissaoCarteira);
+
+        // Detecta quando o usuario troca de conta na MetaMask
+        if (window.ethereum) {
+            window.ethereum.on('accountsChanged', function () {
+                window.location.reload();
+            });
+        }
+
+        async function uploadParaIPFS(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const response = await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${PINATA_JWT}` },
+                body: formData
+            });
+
+            if (!response.ok) throw new Error('Falha no upload para o IPFS.');
+            const data = await response.json();
+            return data.IpfsHash;
+        }
+
+        async function processarERegistrar() {
+            // Re-verifica a permissao antes de prosseguir
+            const eAutorizado = await verificarPermissaoCarteira();
+            if (!eAutorizado) {
+                alert('Acesso negado: Apenas a carteira do proprietário pode realizar registros.');
+                return;
+            }
+
+            const fileInput = document.getElementById('fileInput');
+            const tituloObra = document.getElementById('tituloObra').value || "Não informado";
+            const nomeAutor = document.getElementById('nomeAutor').value || "Não informado";
+            const status = document.getElementById('status');
+
+            if (!fileInput.files.length) {
+                alert('Por favor, selecione um arquivo primeiro!');
+                return;
+            }
+
+            const file = fileInput.files[0];
+            status.innerHTML = "⌛ Lendo arquivo e calculando Hash SHA-256...";
+
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const buffer = e.target.result;
+                    const hashArray = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', buffer)));
+                    const fileHash = '0x' + hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+                    status.innerHTML = `<p><b>Hash Gerado:</b> <br><code>${fileHash}</code></p><p>⌛ Salvando arquivo no IPFS...</p>`;
+
+                    const ipfsCID = await uploadParaIPFS(file);
+                    status.innerHTML += `<p><b>IPFS CID:</b> <br><code>${ipfsCID}</code></p><p>⌛ Preparando transação na MetaMask...</p>`;
+
+                    const provider = new ethers.providers.Web3Provider(window.ethereum);
+                    const signer = provider.getSigner();
+
+                    status.innerHTML += "<p>⌛ Enviando registro para a Blockchain...</p>";
+
+                    const payloadData = `HASH:${fileHash} | IPFS:https://ipfs.io/ipfs/${ipfsCID}`;
+
+                    const tx = await signer.sendTransaction({
+                        to: USER_WALLET,
+                        value: ethers.utils.parseEther("0.0"),
+                        data: ethers.utils.hexlify(ethers.utils.toUtf8Bytes(payloadData))
+                    });
+
+                    const dataAtual = new Date().toLocaleString('pt-BR');
+                    const tamanhoFormatado = (file.size / (1024 * 1024)).toFixed(2) + " MB";
+                    const polygonScanUrl = `https://polygonscan.com/tx/${tx.hash}`;
+
+                    // Preenche dados do certificado visual
+                    document.getElementById('certTitulo').innerText = tituloObra;
+                    document.getElementById('certAutor').innerText = nomeAutor;
+                    document.getElementById('certNomeArquivo').innerText = file.name;
+                    document.getElementById('certTamanho').innerText = tamanhoFormatado;
+                    document.getElementById('certData').innerText = dataAtual;
+                    document.getElementById('certHash').innerText = fileHash;
+                    document.getElementById('certIPFS').innerText = ipfsCID;
+                    document.getElementById('certTxHash').innerText = tx.hash;
+
+                    // Gerar QR Code
+                    document.getElementById('qrcode').innerHTML = "";
+                    new QRCode(document.getElementById("qrcode"), {
+                        text: polygonScanUrl,
+                        width: 90,
+                        height: 90
+                    });
+
+                    status.innerHTML = `<p style="color: green;"><b>✅ REGISTRO CONCLUÍDO COM SUCESSO!</b></p>
+                                        <p><b>Hash da Obra:</b> <br><code>${fileHash}</code></p>
+                                        <p><b>Comprovante (TxHash):</b> <br><code>${tx.hash}</code></p>
+                                        <button onclick="baixarPDF()" style="padding: 12px 20px; font-size: 16px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; margin-top: 10px;">
+                                            📄 Baixar Certificado A4 em PDF
+                                        </button>`;
+                } catch (err) {
+                    status.innerHTML = `<p style="color: red;">Erro ao registrar: ${err.message}</p>`;
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function baixarPDF() {
+            const element = document.getElementById('certificadoA4');
+            const container = document.getElementById('certificadoContainer');
+            
+            // Exibe temporariamente para captura
+            container.style.display = 'block';
+
+            const opt = {
+                margin:       0,
+                filename:     'Certificado_Registro_Obra.pdf',
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2 },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(element).save().then(() => {
+                container.style.display = 'none';
+            });
+        }
+    </script>
+</body>
+</html>
