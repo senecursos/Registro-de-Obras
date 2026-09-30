@@ -14,7 +14,7 @@
     <h2>Painel de Controle</h2>
 
     <!-- Banner de Status da Carteira -->
-    <div id="statusCarteira" style="padding: 12px; margin-bottom: 20px; border-radius: 6px; font-weight: bold; background: #e2e3e5; color: #383d41;">
+    <div id="statusCarteira" style="padding: 12px; margin-bottom: 20px; border-radius: 6px; font-weight: bold; background: #e2e3e5; color: #383d41; word-break: break-all;">
         ⌛ Verificando permissão de acesso à carteira...
     </div>
 
@@ -121,13 +121,13 @@
                     if (carteiraConectada === USER_WALLET) {
                         statusBanner.style.background = "#d4edda";
                         statusBanner.style.color = "#155724";
-                        statusBanner.innerHTML = `✅ Carteira Autorizada Conectada: <code>${contas[0]}</code>`;
+                        statusBanner.innerHTML = `✅ Carteira Autorizada Conectada: <code style="word-break: break-all;">${contas[0]}</code>`;
                         painelRegistro.style.display = "block";
                         return true;
                     } else {
                         statusBanner.style.background = "#f8d7da";
                         statusBanner.style.color = "#721c24";
-                        statusBanner.innerHTML = `🚫 <b>ACESSO NEGADO:</b> A carteira <code>${contas[0]}</code> não tem permissão para registrar obras.`;
+                        statusBanner.innerHTML = `🚫 <b>ACESSO NEGADO:</b> A carteira <code style="word-break: break-all;">${contas[0]}</code> não tem permissão para registrar obras.`;
                         painelRegistro.style.display = "none";
                         return false;
                     }
@@ -200,10 +200,10 @@
                     const hashArray = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', buffer)));
                     const fileHash = '0x' + hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 
-                    status.innerHTML = `<p><b>Hash Gerado:</b> <br><code>${fileHash}</code></p><p>⌛ Salvando arquivo no IPFS...</p>`;
+                    status.innerHTML = `<p><b>Hash Gerado:</b> <br><code style="word-break: break-all;">${fileHash}</code></p><p>⌛ Salvando arquivo no IPFS...</p>`;
 
                     const ipfsCID = await uploadParaIPFS(file);
-                    status.innerHTML += `<p><b>IPFS CID:</b> <br><code>${ipfsCID}</code></p><p>⌛ Preparando transação na MetaMask...</p>`;
+                    status.innerHTML += `<p><b>IPFS CID:</b> <br><code style="word-break: break-all;">${ipfsCID}</code></p><p>⌛ Preparando transação na MetaMask...</p>`;
 
                     const provider = new ethers.providers.Web3Provider(window.ethereum);
                     const signer = provider.getSigner();
@@ -241,8 +241,8 @@
                     });
 
                     status.innerHTML = `<p style="color: green;"><b>✅ REGISTRO CONCLUÍDO COM SUCESSO!</b></p>
-                                        <p><b>Hash da Obra:</b> <br><code>${fileHash}</code></p>
-                                        <p><b>Comprovante (TxHash):</b> <br><code>${tx.hash}</code></p>
+                                        <p><b>Hash da Obra:</b> <br><code style="word-break: break-all;">${fileHash}</code></p>
+                                        <p><b>Comprovante (TxHash):</b> <br><code style="word-break: break-all;">${tx.hash}</code></p>
                                         <button onclick="baixarPDF()" style="padding: 12px 20px; font-size: 16px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; margin-top: 10px;">
                                             📄 Baixar Certificado A4 em PDF
                                         </button>`;
