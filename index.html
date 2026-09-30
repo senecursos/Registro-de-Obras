@@ -8,8 +8,13 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+    </style>
 </head>
-<body style="font-family: sans-serif; padding: 20px; background: #f4f4f9;">
+<body style="font-family: sans-serif; padding: 20px; background: #f4f4f9; margin: 0;">
 
     <h2>Painel de Controle</h2>
 
@@ -20,24 +25,26 @@
 
     <!-- Painel de Formulário (Oculto até que a carteira seja autorizada) -->
     <div id="painelRegistro" style="display: none;">
-        <p>Selecione o arquivo da obra para gerar o registro de autoria:</p>
+        <p style="margin-top: 0;">Selecione o arquivo da obra para gerar o registro de autoria:</p>
 
         <div style="margin-bottom: 15px;">
             <label><b>Título da Obra:</b></label><br>
-            <input type="text" id="tituloObra" style="width: 100%; max-width: 400px; padding: 8px; margin-top: 4px;"><br><br>
+            <input type="text" id="tituloObra" style="width: 100%; max-width: 400px; padding: 8px; margin-top: 6px; border: 1px solid #ccc; border-radius: 4px;"><br><br>
             
             <label><b>Nome do Autor / Titular:</b></label><br>
-            <input type="text" id="nomeAutor" style="width: 100%; max-width: 400px; padding: 8px; margin-top: 4px;">
+            <input type="text" id="nomeAutor" style="width: 100%; max-width: 400px; padding: 8px; margin-top: 6px; border: 1px solid #ccc; border-radius: 4px;">
         </div>
         
-        <input type="file" id="fileInput" style="margin-bottom: 20px;"><br>
+        <div style="margin-bottom: 20px;">
+            <input type="file" id="fileInput" style="width: 100%; max-width: 400px;">
+        </div>
         
-        <button id="btnRegistrar" onclick="processarERegistrar()" style="padding: 10px 20px; font-size: 16px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 4px;">
+        <button id="btnRegistrar" onclick="processarERegistrar()" style="padding: 12px 20px; font-size: 16px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 4px; width: 100%; max-width: 400px;">
             Registrar Obra
         </button>
     </div>
 
-    <div id="status" style="margin-top: 20px; font-weight: bold;"></div>
+    <div id="status" style="margin-top: 20px; font-weight: bold; word-break: break-all;"></div>
 
     <!-- Área do Certificado Oculta (Ativada para geração de PDF) -->
     <div id="certificadoContainer" style="display: none;">
@@ -243,7 +250,7 @@
                     status.innerHTML = `<p style="color: green;"><b>✅ REGISTRO CONCLUÍDO COM SUCESSO!</b></p>
                                         <p><b>Hash da Obra:</b> <br><code style="word-break: break-all;">${fileHash}</code></p>
                                         <p><b>Comprovante (TxHash):</b> <br><code style="word-break: break-all;">${tx.hash}</code></p>
-                                        <button onclick="baixarPDF()" style="padding: 12px 20px; font-size: 16px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; margin-top: 10px;">
+                                        <button onclick="baixarPDF()" style="padding: 12px 20px; font-size: 16px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; margin-top: 10px; width: 100%; max-width: 400px;">
                                             📄 Baixar Certificado A4 em PDF
                                         </button>`;
                 } catch (err) {
